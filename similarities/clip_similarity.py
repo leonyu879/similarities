@@ -31,7 +31,7 @@ class ClipSimilarity(SimilarityABC):
     def __init__(
             self,
             corpus: Union[List[Image.Image], Dict[str, Image.Image]] = None,
-            model_name_or_path: str ='OFA-Sys/chinese-clip-vit-base-patch16',
+            model_name_or_path: str = 'OFA-Sys/chinese-clip-vit-base-patch16',
             device: str = None,
     ):
         self.clip_model = ClipModule(model_name_or_path, device=device)  # load the CLIP model
@@ -94,7 +94,9 @@ class ClipSimilarity(SimilarityABC):
             normalize_embeddings=normalize_embeddings,
         )
 
-    def add_corpus(self, corpus: Union[List[Image.Image], Dict[str, Image.Image]], batch_size: int = 32,
+    def add_corpus(self, corpus: Union[List[Image.Image], Dict[str, Image.Image]],
+                   key: str = SimilarityABC.default_key,
+                   batch_size: int = 32,
                    normalize_embeddings: bool = True):
         """Extend the corpus with new documents."""
         corpus_new = {}
@@ -149,7 +151,7 @@ class ClipSimilarity(SimilarityABC):
         """Compute cosine distance between two texts."""
         return 1 - self.similarity(a, b)
 
-    def most_similar(self, queries, topn: int = 10, **kwargs):
+    def most_similar(self, queries, topn: int = 10, key: str = SimilarityABC.default_key, **kwargs):
         """
         Find the topn most similar texts to the queries against the corpus.
         :param queries: text or image

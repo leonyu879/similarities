@@ -12,6 +12,8 @@ from typing import List, Union, Dict
 
 
 class SimilarityABC:
+    default_key = 'default'
+
     """
     Interface for similarity compute and search.
 
@@ -20,7 +22,7 @@ class SimilarityABC:
     to individual corpus documents.
     """
 
-    def add_corpus(self, corpus: Union[List[str], Dict[str, str]]):
+    def add_corpus(self, corpus: Union[List[str], Dict[str, str]], key: str = default_key):
         """
         Extend the corpus with new documents.
 
@@ -44,7 +46,7 @@ class SimilarityABC:
         """Compute cosine distance between two texts."""
         raise NotImplementedError("cannot instantiate Abstract Base Class")
 
-    def most_similar(self, queries: Union[str, List[str], Dict[int, str]], topn: int = 10):
+    def most_similar(self, queries: Union[str, List[str], Dict[int, str]], topn: int = 10, key: str = default_key):
         """
         Find the topn most similar texts to the query against the corpus.
         :param queries: Dict[int(query_id), str(query_text)] or List[str] or str
@@ -53,11 +55,11 @@ class SimilarityABC:
         """
         raise NotImplementedError("cannot instantiate Abstract Base Class")
 
-    def search(self, queries: Union[str, List[str], Dict[int, str]], topn: int = 10):
+    def search(self, queries: Union[str, List[str], Dict[int, str]], topn: int = 10, key: str = default_key):
         """
         Find the topn most similar texts to the query against the corpus.
         :param queries: Dict[int(query_id), str(query_text)] or List[str] or str
         :param topn: int
         :return: Dict[str, Dict[str, float]], {query_id: {corpus_id: similarity_score}, ...}
         """
-        return self.most_similar(queries, topn=topn)
+        return self.most_similar(queries, topn=topn, key=key)

@@ -8,6 +8,7 @@ from typing import List, Union, Dict
 
 from loguru import logger
 
+from similarities import SimilarityABC
 from similarities.bert_similarity import BertSimilarity
 
 
@@ -82,6 +83,7 @@ class AnnoySimilarity(BertSimilarity):
             logger.warning("No index path given. Index not loaded.")
 
     def most_similar(self, queries: Union[str, List[str], Dict[str, str]], topn: int = 10,
+                     key: str = SimilarityABC.default_key,
                      score_function: str = "cos_sim", **kwargs):
         """Find the topn most similar texts to the query against the corpus."""
         result = {}
@@ -188,6 +190,7 @@ class HnswlibSimilarity(BertSimilarity):
             logger.warning("No index path given. Index not loaded.")
 
     def most_similar(self, queries: Union[str, List[str], Dict[str, str]], topn: int = 10,
+                     key: str = SimilarityABC.default_key,
                      score_function: str = "cos_sim", **kwargs):
         """Find the topn most similar texts to the query against the corpus."""
         result = {}

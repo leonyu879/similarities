@@ -51,7 +51,7 @@ class SimHashSimilarity(SimilarityABC):
             base += f", corpus size: {len(self.corpus)}"
         return base
 
-    def add_corpus(self, corpus: Union[List[str], Dict[int, str]]):
+    def add_corpus(self, corpus: Union[List[str], Dict[int, str]], key: str = SimilarityABC.default_key):
         """
         Extend the corpus with new documents.
 
@@ -162,7 +162,7 @@ class SimHashSimilarity(SimilarityABC):
         sim_scores = self.similarity(a, b)
         return [1 - score for score in sim_scores]
 
-    def most_similar(self, queries: Union[str, List[str], Dict[int, str]], topn: int = 10):
+    def most_similar(self, queries: Union[str, List[str], Dict[int, str]], topn: int = 10, key: str = SimilarityABC.default_key):
         """
         Find the topn most similar texts to the query against the corpus.
         :param queries: list of str or str
@@ -243,7 +243,7 @@ class TfidfSimilarity(SimilarityABC):
             base += f", corpus size: {len(self.corpus)}"
         return base
 
-    def add_corpus(self, corpus: Union[List[str], Dict[int, str]]):
+    def add_corpus(self, corpus: Union[List[str], Dict[int, str]], key: str = SimilarityABC.default_key):
         """
         Extend the corpus with new documents.
 
@@ -294,7 +294,7 @@ class TfidfSimilarity(SimilarityABC):
         """Compute cosine distance between two keys."""
         return 1 - self.similarity(a, b)
 
-    def most_similar(self, queries: Union[str, List[str], Dict[int, str]], topn: int = 10):
+    def most_similar(self, queries: Union[str, List[str], Dict[int, str]], topn: int = 10, key: str = SimilarityABC.default_key):
         """Find the topn most similar texts to the query against the corpus.
         :param queries: list of str or str
         :param topn: int
@@ -372,7 +372,7 @@ class BM25Similarity(SimilarityABC):
             base += f", corpus size: {len(self.corpus)}"
         return base
 
-    def add_corpus(self, corpus: Union[List[str], Dict[int, str]]):
+    def add_corpus(self, corpus: Union[List[str], Dict[int, str]], key: str = SimilarityABC.default_key):
         """
         Extend the corpus with new documents.
 
@@ -404,7 +404,7 @@ class BM25Similarity(SimilarityABC):
         self.bm25 = BM25Okapi(corpus_seg)
         logger.info(f"Total corpus: {len(self.corpus)}")
 
-    def most_similar(self, queries: Union[str, List[str], Dict[int, str]], topn=10):
+    def most_similar(self, queries: Union[str, List[str], Dict[int, str]], topn=10, key: str = SimilarityABC.default_key):
         """
         Find the topn most similar texts to the query against the corpus.
         :param queries: input query
@@ -471,7 +471,7 @@ class WordEmbeddingSimilarity(SimilarityABC):
             base += f", corpus size: {len(self.corpus)}"
         return base
 
-    def add_corpus(self, corpus: Union[List[str], Dict[int, str]]):
+    def add_corpus(self, corpus: Union[List[str], Dict[int, str]], key: str = SimilarityABC.default_key):
         """
         Extend the corpus with new documents.
 
@@ -514,7 +514,7 @@ class WordEmbeddingSimilarity(SimilarityABC):
         """Compute cosine distance between two texts."""
         return 1 - self.similarity(a, b)
 
-    def most_similar(self, queries: Union[str, List[str], Dict[int, str]], topn: int = 10):
+    def most_similar(self, queries: Union[str, List[str], Dict[int, str]], topn: int = 10, key: str = SimilarityABC.default_key):
         """
         Find the topn most similar texts to the query against the corpus.
         :param queries: list of str or str
@@ -593,7 +593,7 @@ class CilinSimilarity(SimilarityABC):
             base += f", corpus size: {len(self.corpus)}"
         return base
 
-    def add_corpus(self, corpus: Union[List[str], Dict[int, str]]):
+    def add_corpus(self, corpus: Union[List[str], Dict[int, str]], key: str = SimilarityABC.default_key):
         """
         Extend the corpus with new documents.
 
@@ -705,7 +705,7 @@ class CilinSimilarity(SimilarityABC):
         """Compute cosine distance between two texts."""
         return [1 - s for s in self.similarity(a, b)]
 
-    def most_similar(self, queries: Union[str, List[str], Dict[int, str]], topn: int = 10):
+    def most_similar(self, queries: Union[str, List[str], Dict[int, str]], topn: int = 10, key: str = SimilarityABC.default_key):
         """Find the topn most similar texts to the query against the corpus."""
         if isinstance(queries, str) or not hasattr(queries, '__len__'):
             queries = [queries]
@@ -750,7 +750,7 @@ class HownetSimilarity(SimilarityABC):
             base += f", corpus size: {len(self.corpus)}"
         return base
 
-    def add_corpus(self, corpus: Union[List[str], Dict[int, str]]):
+    def add_corpus(self, corpus: Union[List[str], Dict[int, str]], key: str = SimilarityABC.default_key):
         """
         Extend the corpus with new documents.
 
@@ -835,7 +835,7 @@ class HownetSimilarity(SimilarityABC):
         """Compute Hownet distance between two keys."""
         return [1 - s for s in self.similarity(a, b)]
 
-    def most_similar(self, queries: Union[str, List[str], Dict[int, str]], topn: int = 10):
+    def most_similar(self, queries: Union[str, List[str], Dict[int, str]], topn: int = 10, key: str = SimilarityABC.default_key):
         """Find the topn most similar texts to the query against the corpus."""
         if isinstance(queries, str) or not hasattr(queries, '__len__'):
             queries = [queries]
@@ -880,7 +880,7 @@ class SameCharsSimilarity(SimilarityABC):
             base += f", corpus size: {len(self.corpus)}"
         return base
 
-    def add_corpus(self, corpus: Union[List[str], Dict[int, str]]):
+    def add_corpus(self, corpus: Union[List[str], Dict[int, str]], key: str = SimilarityABC.default_key):
         """
         Extend the corpus with new documents.
 
@@ -931,7 +931,7 @@ class SameCharsSimilarity(SimilarityABC):
         """Compute cosine distance between two texts."""
         return [1 - s for s in self.similarity(a, b)]
 
-    def most_similar(self, queries: Union[str, List[str], Dict[int, str]], topn: int = 10):
+    def most_similar(self, queries: Union[str, List[str], Dict[int, str]], topn: int = 10, key: str = SimilarityABC.default_key):
         """Find the topn most similar texts to the query against the corpus."""
         if isinstance(queries, str) or not hasattr(queries, '__len__'):
             queries = [queries]
@@ -976,7 +976,7 @@ class SequenceMatcherSimilarity(SimilarityABC):
             base += f", corpus size: {len(self.corpus)}"
         return base
 
-    def add_corpus(self, corpus: Union[List[str], Dict[int, str]]):
+    def add_corpus(self, corpus: Union[List[str], Dict[int, str]], key: str = SimilarityABC.default_key):
         """
         Extend the corpus with new documents.
 
@@ -1031,7 +1031,7 @@ class SequenceMatcherSimilarity(SimilarityABC):
         """Compute cosine distance between two texts."""
         return [1 - s for s in self.similarity(a, b)]
 
-    def most_similar(self, queries: Union[str, List[str], Dict[int, str]], topn: int = 10):
+    def most_similar(self, queries: Union[str, List[str], Dict[int, str]], topn: int = 10, key: str = SimilarityABC.default_key):
         """Find the topn most similar texts to the query against the corpus."""
         if isinstance(queries, str) or not hasattr(queries, '__len__'):
             queries = [queries]

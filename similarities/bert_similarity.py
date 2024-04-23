@@ -10,6 +10,7 @@ Compute similarity:
 
 import json
 import os
+from collections import defaultdict
 from typing import List, Union, Dict
 
 import numpy as np
@@ -57,8 +58,8 @@ class BertSimilarity(SimilarityABC):
         else:
             raise ValueError("model_name_or_path is transformers model name or path")
         self.score_functions = {'cos_sim': cos_sim, 'dot': dot_score}
-        self.corpus = {}
-        self.corpus_embeddings = []
+        self.corpus = defaultdict(dict)
+        self.corpus_embeddings = defaultdict(list)
         if corpus is not None:
             self.add_corpus(corpus)
 
@@ -86,7 +87,8 @@ class BertSimilarity(SimilarityABC):
         else:
             return getattr(self.sentence_model.bert.pooler.dense, "out_features", None)
 
-    def add_corpus(self, corpus: Union[List[str], Dict[int, str]], batch_size: int = 32,
+    def add_corpus(self, corpus: Union[List[str], Dict[int, str]], key: str = SimilarityABC.default_key,
+                   batch_size: int = 32,
                    normalize_embeddings: bool = True):
         """
         Extend the corpus with new documents.
@@ -96,15 +98,16 @@ class BertSimilarity(SimilarityABC):
         :return: corpus, corpus embeddings
         """
         new_corpus = {}
-        start_id = len(self.corpus) if self.corpus else 0
+        key_corpus = self.corpus[key]
+        start_id = len(key_corpus) if key_corpus else 0
         for id, doc in enumerate(corpus):
             if isinstance(corpus, list):
-                if doc not in self.corpus.values():
+                if doc not in key_corpus.values():
                     new_corpus[start_id + id] = doc
             else:
                 if doc not in self.corpus.values():
                     new_corpus[id] = doc
-        self.corpus.update(new_corpus)
+        key_corpus.update(new_corpus)
         logger.info(f"Start computing corpus embeddings, new docs: {len(new_corpus)}")
         corpus_embeddings = self.get_embeddings(
             list(new_corpus.values()),
@@ -113,10 +116,12 @@ class BertSimilarity(SimilarityABC):
             normalize_embeddings=normalize_embeddings,
             convert_to_numpy=True,
         ).tolist()
-        if self.corpus_embeddings:
-            self.corpus_embeddings = self.corpus_embeddings + corpus_embeddings
+        key_corpus_embeddings = self.corpus_embeddings[key]
+        if key_corpus_embeddings:
+            key_corpus_embeddings = key_corpus_embeddings + corpus_embeddings
         else:
-            self.corpus_embeddings = corpus_embeddings
+            key_corpus_embeddings = corpus_embeddings
+        self.corpus_embeddings[key] = key_corpus_embeddings
         logger.info(f"Add {len(new_corpus)} docs, total: {len(self.corpus)}, emb len: {len(self.corpus_embeddings)}")
 
     def get_embeddings(
@@ -163,6 +168,7 @@ class BertSimilarity(SimilarityABC):
         return 1 - self.similarity(a, b)
 
     def most_similar(self, queries: Union[str, List[str], Dict[int, str]], topn: int = 10,
+                     key: str = SimilarityABC.default_key,
                      score_function: str = "cos_sim", **kwargs):
         """
         Find the topn most similar texts to the queries against the corpus.
@@ -185,7 +191,7 @@ class BertSimilarity(SimilarityABC):
         queries_ids_map = {i: id for i, id in enumerate(list(queries.keys()))}
         queries_texts = list(queries.values())
         queries_embeddings = self.get_embeddings(queries_texts, convert_to_tensor=True, **kwargs)
-        corpus_embeddings = np.array(self.corpus_embeddings, dtype=np.float32)
+        corpus_embeddings = np.array(self.corpus_embeddings[key], dtype=np.float32)
         all_hits = semantic_search(queries_embeddings, corpus_embeddings, top_k=topn, score_function=score_function)
         for idx, hits in enumerate(all_hits):
             for hit in hits[0:topn]:
@@ -200,9 +206,10 @@ class BertSimilarity(SimilarityABC):
         :return:
         """
         with open(emb_path, "w", encoding="utf-8") as f:
-            for id, emb in zip(self.corpus.keys(), self.corpus_embeddings):
-                json_obj = {"id": id, "doc": self.corpus[id], "doc_emb": list(emb)}
-                f.write(json.dumps(json_obj, ensure_ascii=False) + "\n")
+            for key in self.corpus.keys():
+                for id, emb in zip(self.corpus[key], self.corpus_embeddings):
+                    json_obj = {"key": key, "id": id, "doc": self.corpus[id], "doc_emb": list(emb)}
+                    f.write(json.dumps(json_obj, ensure_ascii=False) + "\n")
         logger.debug(f"Save corpus embeddings to file: {emb_path}.")
 
     def load_corpus_embeddings(self, emb_path: str = "bert_corpus_emb.jsonl"):
@@ -213,11 +220,12 @@ class BertSimilarity(SimilarityABC):
         """
         try:
             with open(emb_path, "r", encoding="utf-8") as f:
-                corpus_embeddings = []
+                corpus_embeddings = defaultdict(list)
                 for line in f:
                     json_obj = json.loads(line)
-                    self.corpus[int(json_obj["id"])] = json_obj["doc"]
-                    corpus_embeddings.append(json_obj["doc_emb"])
+                    key = json_obj["key"]
+                    self.corpus[key][int(json_obj["id"])] = json_obj["doc"]
+                    corpus_embeddings[key].append(json_obj["doc_emb"])
                 self.corpus_embeddings = corpus_embeddings
         except (IOError, json.JSONDecodeError):
             logger.error("Error: Could not load corpus embeddings from file.")
